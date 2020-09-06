@@ -2175,8 +2175,16 @@ class YoutubeIE(YoutubeBaseInfoExtractor):
                 r'data-channel-external-id=(["\'])(?P<id>(?:(?!\1).)+)\1',
                 video_webpage, 'channel id', default=None, group='id'))
         channel_url = 'http://www.youtube.com/channel/%s' % channel_id if channel_id else None
-
+        
         # thumbnail image
+        # We try first to get a high quality image:
+        m_thumb = re.search(r'<span itemprop="thumbnail".*?href="(.*?)">',
+                            video_webpage, re.DOTALL)
+        if m_thumb is not None:
+            video_thumbnail = m_thumb.group(1)
+        elif 'thumbnail_url' not in video_info:
+            self._downloader.report_warning('unable to extract video thumbnail')
+            video_thumbnail = None
         else:   # don't panic if we can't find it
             video_thumbnail = compat_urllib_parse_unquote_plus(video_info['thumbnail_url'][0])
 
